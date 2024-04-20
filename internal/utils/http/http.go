@@ -34,7 +34,7 @@ func template(method string, contentType string) func(string, *Req) ([]byte, int
 		req.Header.Add("x-origin", "https://resy.com")
 		req.Header.Add("cache-control", "no-cache")
 		req.Header.Add("accept-encoding", "application/json")
-		req.Header.Add("acept", "*/*")
+		req.Header.Add("accept", "*/*")
 		req.Header.Add("connection", "keep-alive")
 		client := &http.Client{Timeout: 3 * time.Second}
 		authHeaders := getAuthHeaders()
