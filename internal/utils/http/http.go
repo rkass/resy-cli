@@ -8,8 +8,6 @@ import (
 	"net/http/httputil"
 	"time"
 
-	"moul.io/http2curl"
-
 	"github.com/spf13/viper"
 )
 
