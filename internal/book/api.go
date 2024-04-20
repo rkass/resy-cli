@@ -117,24 +117,36 @@ func bookSlot(bookingDetails *BookingDetails, slot Slot) error {
 	_ = json.Unmarshal(responseBody, &details)
 
 	// Actually book with token
-	token := fmt.Sprintf("book_token=%s", url.PathEscape(details.BookToken.Value))
+	token := fmt.Sprintf("book_token=%s", details.BookToken.Value)
+	sourceId := fmt.Sprintf("source_id=resy.com-venue-details")
+	var paymentDetailss string
 	var paymentDetails string
 	if details.User.PaymentMethods != nil {
 		if len(details.User.PaymentMethods) != 0 {
 			body, _ := json.Marshal(struct {
 				Id int64 `json:"id"`
 			}{Id: details.User.PaymentMethods[0].Id})
+			//{Id: 23574202})
+			paymentDetailss = string(body)
 			paymentDetails = fmt.Sprintf("struct_payment_method=%s", url.PathEscape(string(body)))
 		}
 	}
 
 	var form string
 	if paymentDetails != "" {
-		form = strings.Join([]string{token, paymentDetails}, "&")
+		form = strings.Join([]string{token, paymentDetails, sourceId}, "&")
+		formBody := url.Values{
+			"book_token": []string{details.BookToken.Value}, // we only have a single element, but these need to be a slice
+			"struct_payment_method":  []string{paymentDetailss}, // same as above
+			"source_id": []string{"resy.com-venue-details"},
+		}
+		form = formBody.Encode()
 	} else {
 		form = token
 	}
-	_, statusCode, err = http.PostForm("https://api.resy.com/3/book", &http.Req{Body: []byte(form)})
+	fmt.Println("forrmmm")
+	fmt.Println(form)
+	_, statusCode, err = http.PostForm("https://api.resy.com/3/book", &http.Req{StringBody: form})
 	if err != nil {
 		return err
 	}
