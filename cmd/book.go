@@ -58,8 +58,9 @@ var bookCmd = &cobra.Command{
 		}
 
 		defer logFile.Close()
+		w := zerolog.MultiLevelWriter(logFile, os.Stdout)
 
-		l := zerolog.New(logFile).With().Timestamp().Logger()
+		l := zerolog.New(w).With().Timestamp().Logger()
 
 		l.Info().Object("booking_details", bookingDetails).Msg("starting book job")
 
