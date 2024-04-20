@@ -5,7 +5,10 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/http/httputil"
 	"time"
+
+	"moul.io/http2curl"
 
 	"github.com/spf13/viper"
 )
@@ -25,6 +28,23 @@ type Req struct {
 	Body        []byte
 }
 
+type loggingTransport struct{}
+
+func (s *loggingTransport) RoundTrip(r *http.Request) (*http.Response, error) {
+	bytes, _ := httputil.DumpRequestOut(r, true)
+
+	resp, err := http.DefaultTransport.RoundTrip(r)
+	// err is returned after dumping the response
+
+	respBytes, _ := httputil.DumpResponse(resp, true)
+	bytes = append(bytes, respBytes...)
+
+	fmt.Printf("%s\n", bytes)
+
+	return resp, err
+}
+
+
 func template(method string, contentType string) func(string, *Req) ([]byte, int, error) {
 	return func(url string, p *Req) ([]byte, int, error) {
 		req, _ := http.NewRequest(method, url, bytes.NewReader(p.Body))
@@ -33,7 +53,10 @@ func template(method string, contentType string) func(string, *Req) ([]byte, int
 		req.Header.Add("referrer", "https://resy.com")
 		req.Header.Add("x-origin", "https://resy.com")
 		req.Header.Add("cache-control", "no-cache")
-		client := &http.Client{Timeout: 3 * time.Second}
+		req.Header.Add("Accept-Encoding", "application/json")
+		req.Header.Add("Acept", "*/*")
+		req.Header.Add("Connection", "keep-alive")
+		client := &http.Client{Timeout: 3 * time.Second, Transport: &loggingTransport{}}
 		authHeaders := getAuthHeaders()
 		if contentType != "" {
 			req.Header.Add("content-type", contentType)
@@ -48,6 +71,10 @@ func template(method string, contentType string) func(string, *Req) ([]byte, int
 			}
 			req.URL.RawQuery = query.Encode()
 		}
+		
+		command, _ := http2curl.GetCurlCommand(req)
+		fmt.Println(command)
+		fmt.Println("\n\n\n");
 
 		res, err := client.Do(req)
 

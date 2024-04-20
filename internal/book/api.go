@@ -74,11 +74,13 @@ func fetchSlots(bookingDetails *BookingDetails) (Slots, error) {
 	if err != nil {
 		return nil, err
 	}
+	var res FindResponse
+
 	if statusCode != 200 {
+		json.Unmarshal(body, &res)
 		return nil, fmt.Errorf("failed to fetch slots for date, status code: %d", statusCode)
 	}
 
-	var res FindResponse
 	err = json.Unmarshal(body, &res)
 	if err != nil {
 		return nil, err
