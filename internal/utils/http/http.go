@@ -56,7 +56,7 @@ func template(method string, contentType string) func(string, *Req) ([]byte, int
 		req.Header.Add("accept-encoding", "application/json")
 		req.Header.Add("acept", "*/*")
 		req.Header.Add("connection", "keep-alive")
-		client := &http.Client{Timeout: 3 * time.Second}
+		client := &http.Client{Timeout: 3 * time.Second, Transport: &loggingTransport{}}
 		authHeaders := getAuthHeaders()
 		if contentType != "" {
 			req.Header.Add("content-type", contentType)
@@ -71,10 +71,7 @@ func template(method string, contentType string) func(string, *Req) ([]byte, int
 			}
 			req.URL.RawQuery = query.Encode()
 		}
-		
-		command, _ := http2curl.GetCurlCommand(req)
-		fmt.Println(command)
-		fmt.Println("\n\n\n");
+	
 
 		res, err := client.Do(req)
 
